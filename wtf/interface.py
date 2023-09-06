@@ -1,6 +1,7 @@
 from flask import Blueprint , jsonify , render_template
 from .models import Classes , Works , Schedule , BaseWorks , Subjects
-from datetime import date
+from datetime import date , datetime
+import pytz
 
 interface = Blueprint('interface' , '__name__' , url_prefix='/api/interface')
 
@@ -8,6 +9,18 @@ interface = Blueprint('interface' , '__name__' , url_prefix='/api/interface')
 
 @interface.route("/<className>/")
 def summarize(className):
+
+    utc_now = datetime.utcnow()
+
+    taiwan_tz = pytz.timezone("Asia/Taipei")
+    
+    taiwan_time = utc_now.astimezone(taiwan_tz)
+
+    today = taiwan_time.date()
+
+    print(today)
+
+
     the_class = Classes.query.filter_by(ClassName = className).first()
     if not the_class:
         return jsonify({'msg':"class to found"})
@@ -15,7 +28,6 @@ def summarize(className):
     schedules = Schedule.query.filter_by(Class_id = the_class.id).all()
     json_schedules = ["" if schedule.Subject.SubjectName == "無科目" else schedule.Subject.SubjectName for schedule in schedules]
 
-    today = date.today()
 
     works = Works.query.filter(
         Works.Class_id == the_class.id,
